@@ -18,7 +18,7 @@ class AvocatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Avocat
-        fields = ['id', 'username', 'password', 'email', 'nom', 'specialite', 'coordonnees', 'adresse', 'langues', 'experiences', 'evaluations', ]
+        fields = ['id', 'username', 'password', 'email', 'nom', 'specialite', 'coordonnees', 'adresse', 'langues', 'experiences', 'evaluations', 'nom', 'langue_preference']
 
 class AdminSerializer(serializers.ModelSerializer):
     class Meta:
