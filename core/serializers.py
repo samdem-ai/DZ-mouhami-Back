@@ -1,7 +1,8 @@
 # serializers.py
 from rest_framework import serializers
-from .models import Address, LawyerProfile, LawyerImage, LawyerDocument , ClientProfile , User , TimeSlot , Appointment , Review
+from .models import Address, LawyerProfile, LawyerImage, LawyerDocument , ClientProfile , User , TimeSlot , Appointment , Review , UserProfile
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -27,14 +28,27 @@ class LawyerImageSerializer(serializers.ModelSerializer):
 class LawyerProfileSerializer(serializers.ModelSerializer):
     address = AddressSerializer(required=False, allow_null=True)
     time_slots = TimeSlotSerializer(required=False, allow_null=True, many=True)
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.SerializerMethodField()
     images= LawyerImageSerializer(many=True , read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
 
+    def get_rating(self, obj):
+        try :
+            rating_obj = Review.objects.filter(lawyer=obj).aggregate(rating=Avg('rating'))
+            rating_avg = rating_obj['rating']
+            if rating_avg:
+                   return rating_avg
+            else:
+                return 0
+        except:
+            return 0
+
+
+
     class Meta:
         model = LawyerProfile
-        fields = ['id', 'first_name', 'last_name', 'specialization', 'phone_number', 'bio', 'language', 'address', 'time_slots' , 'rating' , 'images']
+        fields = ['id', 'first_name', 'last_name', 'specialization', 'phone_number', 'bio', 'language', 'address', 'time_slots' , 'rating' , 'images' , 'image']
 
     def create(self, validated_data):
         address_data = validated_data.pop('address', None)
@@ -45,7 +59,7 @@ class LawyerProfileSerializer(serializers.ModelSerializer):
             validated_data['address'] = address
 
         # Save the lawyer profile first
-        lawyer = LawyerProfile.objects.create(**validated_data)
+        lawyer = LawyerProfile.objects.create(**validated_data , image = UserProfile.objects.get(user_id = validated_data['user']).image)
 
         if time_slots_data:
             for slot_data in time_slots_data:
@@ -151,10 +165,12 @@ class LawyerProfileAdminListSerializer(serializers.ModelSerializer):
 
 class AppointmentSerializer(serializers.ModelSerializer):
     status = serializers.CharField(read_only=True)
+    client_name = serializers.CharField(source='client.user.get_full_name', read_only=True)
+    client_age = serializers.CharField(source='client.user.age', read_only=True)
 
     class Meta:
         model = Appointment
-        fields = ['id', 'day', 'start_time', 'end_time' , 'status']
+        fields = ['id', 'day','client_name','client_age', 'start_time', 'end_time' , 'status']
 
     def validate(self, data):
         lawyer = self.context.get('lawyer_profile')
@@ -174,20 +190,24 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
     
 class ReviewSerializer(serializers.ModelSerializer):
+    client_name = serializers.CharField(source='client.user.get_full_name', read_only=True)
+
     class Meta:
         model = Review
-        fields = ['id', 'rating', 'comment', 'created_at']
+        fields = ['id', "lawyer_id","client_id","client_name",'rating', 'comment', 'created_at']
 
     def create(self, validated_data):
         lawyer = self.context.get('lawyer_id')
         client_id = self.context.get('client_id')
         
         # Get the ClientProfile instance using the provided client_id
-        client = get_object_or_404(ClientProfile, id=client_id)
-
+        client= get_object_or_404(ClientProfile, id=client_id)
+        # client_name = client.user.get_full_name()
+        # print(client_name)
         review_instance = Review.objects.create(
             lawyer_id=lawyer,
-            client=client,
+            # client_name=client_name,
+            client = client,
             rating=validated_data['rating'],
             comment=validated_data['comment']
         )

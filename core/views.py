@@ -20,7 +20,7 @@ from django.contrib.auth.models import User
 from .serializers import LawyerProfileAdminListSerializer
 from django.utils import timezone
 from django.db.models import Q
-
+from .pagination import DefaultPagination
 # from allauth.socialaccount.models import SocialAccount
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
@@ -134,33 +134,42 @@ class LawyerDocumentViewSet(viewsets.ModelViewSet):
 
 
 class LawyerProfileViewSet(viewsets.ModelViewSet):
-    queryset = LawyerProfile.objects.prefetch_related('images', 'documents').all()
+    queryset = LawyerProfile.objects.prefetch_related('image', 'documents').all()
     serializer_class = LawyerProfileSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # token = self.request.data["token"]
-        token = "30153466d19707aa0dab8b9a4036e4c1b315aab4"
+        token = self.request.headers.get('Authorization')
         if token:
             try:
                 user = Token.objects.get(key=token).user
             except Token.DoesNotExist:
                 raise PermissionDenied('Lawyer profile not found or not approved.')
-            
+        else :
+            return PermissionDenied("access denied")
+
+        # token = "6aaeffb7d25c4697859f4135245956eec6012708"
+        # token = '6aaeffb7d25c4697859f4135245956eec6012708'
+        # token = "533ba7c8dccd71003fedea92076ab3ef94aaa243"
         user = Token.objects.get(key=token).user
-        return LawyerProfile.objects.filter(user=user, approved=True)
+        return LawyerProfile.objects.filter(user=user)
+
 
     def perform_create(self, serializer):
-                # token = self.request.data["token"]
-        token = "30153466d19707aa0dab8b9a4036e4c1b315aab4"
+        token = self.request.headers.get('Authorization')
         if token:
             try:
                 user = Token.objects.get(key=token).user
             except Token.DoesNotExist:
                 raise PermissionDenied('Lawyer profile not found or not approved.')
-            
+        else :
+            return PermissionDenied("access denied")
+
+        # token = "6aaeffb7d25c4697859f4135245956eec6012708"
+        # token = "533ba7c8dccd71003fedea92076ab3ef94aaa243"
         user = Token.objects.get(key=token).user
 
+        # token = '6aaeffb7d25c4697859f4135245956eec6012708'
+        # user = Token.objects.get(key=token).user
         # Check if the user is a client
         if ClientProfile.objects.filter(user=user).exists():
             raise PermissionDenied('Clients cannot create a lawyer profile')
@@ -214,23 +223,25 @@ class ClientProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        token = "ed1bead289f10f38c401cd3221d63ea6943e0874"
         # token = self.request.data["token"]
+        token = self.request.headers.get('Authorization')
+        print
         if token:
             try:
                 user = Token.objects.get(key=token).user
             except Token.DoesNotExist:
-                raise PermissionDenied('Lawyer profile not found or not approved.')
+                raise PermissionDenied('Client profile not found or not approved.')
         user = Token.objects.get(key=token).user
 
         if LawyerProfile.objects.filter(user=user).exists():
-            raise PermissionDenied('Lawyers cannot see a client profile')
+            raise PermissionDenied('Client cannot see a client profile')
         else:
             return ClientProfile.objects.filter(user=user)
 
     def perform_create(self, serializer):
         # token = self.request.data["token"]
-        token = "ed1bead289f10f38c401cd3221d63ea6943e0874"
+        token = self.request.headers.get('Authorization')
+
         if token:
             try:
                 user = Token.objects.get(key=token).user
@@ -246,24 +257,30 @@ class ClientProfileViewSet(viewsets.ModelViewSet):
             serializer.save(user=user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
             
+class CustomPageNumberPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'limit'
+    max_page_size = 100
 
 
 class LawyerAdminDashboardViewSet(viewsets.ModelViewSet):
     queryset = LawyerProfile.objects.prefetch_related('images', 'documents').all()
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    pagination_class = DefaultPagination
+    paginator = CustomPageNumberPagination()
+#     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
     serializer_class = LawyerProfileAdminListSerializer
 
     def create(self, request, *args, **kwargs):
         return Response({'error': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
     def perform_update(self, serializer):
-        # token = self.request.data["token"]
+        token = self.request.headers.get('Authorization')
 
-        # if token:
-        #     try:
-        #         user = Token.objects.get(key=token).user
-        #     except Token.DoesNotExist:
-        #         raise PermissionDenied('Lawyer profile not found or not approved.')
+        if token:
+            try:
+                user = Token.objects.get(key=token).user
+            except Token.DoesNotExist:
+                raise PermissionDenied('Lawyer profile not found or not approved.')
         # token = "c942aa39c46d86e5d4d4647c971e1c6db6ff397f"
         instance = serializer.save()
 
@@ -284,8 +301,9 @@ class LawyerAdminDashboardViewSet(viewsets.ModelViewSet):
 
 
 class LawyerSearchViewSet(viewsets.ModelViewSet):
-    queryset = LawyerProfile.objects.all()
+    queryset = LawyerProfile.objects.filter(approved=True).all()
     serializer_class = LawyerProfileSerializer
+#     pagination_class = DefaultPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     search_fields = ['user__first_name', 'user__last_name', 'address__city' , 'specialization' , 'address__state' , 'address__country']
     http_method_names = ['get']
@@ -315,18 +333,18 @@ class LawyerSearchViewSet(viewsets.ModelViewSet):
 
         return queryset
     
-    # def list(self, request, *args, **kwargs):
-    #     queryset = self.get_queryset()
-    #     serializer = self.get_serializer(queryset, many=True)
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
 
-    #     # Calculate and include the rating information in the serialized response
-    #     data = serializer.data
-    #     for item in data:
-    #         lawyer_id = item['id']
-    #         rating = Review.objects.filter(lawyer__id=lawyer_id).aggregate(Avg('rating'))['rating__avg']
-    #         item['rating'] = rating
+        # Calculate and include the rating information in the serialized response
+        data = serializer.data
+        for item in data:
+            lawyer_id = item['id']
+            rating = Review.objects.filter(lawyer__id=lawyer_id).aggregate(Avg('rating'))['rating__avg']
+            item['rating'] = rating
 
-    #     return Response(data)
+        return Response(data)
 
 
 
@@ -337,9 +355,11 @@ class LawyerSearchCatViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     search_fields = ['user__first_name', 'user__last_name', 'address__city', 'specialization']
     method = ['GET']
+    
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
         name = self.request.query_params.get('name', None)
         city = self.request.query_params.get('city', None)
         specialization = self.request.query_params.get('specialization', None)
@@ -361,7 +381,9 @@ class AppointmentLawyerModelViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Assuming the user is a lawyer
         # token = self.request.data["token"]
-        token = "30153466d19707aa0dab8b9a4036e4c1b315aab4"
+#         token = "30153466d19707aa0dab8b9a4036e4c1b315aab4"
+        token = self.request.headers.get('Authorization')
+
         if token:
             try:
                 lawyer = Token.objects.get(key=token).user.lawyer_profile
@@ -382,7 +404,10 @@ class AppointmentClientModelViewSet(viewsets.ModelViewSet):
         if lawyer_id:
             lawyer = get_object_or_404(LawyerProfile, id=lawyer_id)
             # token = self.request.data["token"]
-            token = "ed1bead289f10f38c401cd3221d63ea6943e0874"
+#             token = "ed1bead289f10f38c401cd3221d63ea6943e0874"
+            token = self.request.headers.get('Authorization')
+            token = "63c846540763b5e4e5a73f5bc3cfbcd2506b6ed7"
+            token ="68a75b166093b92501ef4b7e9bd9506140a21154"
             if token:
                 try:
                     client = Token.objects.get(key=token).user.client_profile
@@ -399,6 +424,7 @@ class AppointmentClientModelViewSet(viewsets.ModelViewSet):
         lawyer_id = self.kwargs.get('lawyer_pk')
                     # token = self.request.data["token"]
         token = "ed1bead289f10f38c401cd3221d63ea6943e0874"
+        token ="68a75b166093b92501ef4b7e9bd9506140a21154"
         if token:
             try:
                 client = Token.objects.get(key=token).user.client_profile
@@ -447,38 +473,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     def get_serializer_context(self):
-        return {'lawyer_id': self.kwargs['lawyer_pk'] , 'client_id': self.request.user.client_profile.id}
+        token = "ed1bead289f10f38c401cd3221d63ea6943e0874"
+        token = "68a75b166093b92501ef4b7e9bd9506140a21154"
+        # token = self.request.data["token"]
+        if token:
+            try:
+                client = Token.objects.get(key=token).user.client_profile
+            except Token.DoesNotExist:
+                raise PermissionDenied('Client profile not found.')
+        client = Token.objects.get(key=token).user.client_profile
+        return {'lawyer_id': self.kwargs['lawyer_pk'] , 'client_id': client.id}
     
 
 
 
-@api_view(['GET'])
-def lawyer_profile_search(request):
-    lawyer_category = request.GET.get('lawyer_category', '')
-    location = request.GET.get('location', '')
-
-    search_results = LawyerProfile.objects.filter(approved=True)
-
-    if lawyer_category:
-        lawyer_filter = (
-            Q(user__first_name__icontains=lawyer_category) |
-            Q(specialization__icontains=lawyer_category)
-        )
-        search_results = search_results.filter(lawyer_filter)
-
-    if location:
-        address_filter = (
-            Q(address__street__icontains=location) |
-            Q(address__city__icontains=location) |
-            Q(address__state__icontains=location) |
-            Q(address__country__icontains=location)
-        )
-        search_results = search_results.filter(address_filter)
-
-    search_results = search_results.order_by('-rating')
-    
-    serialized_results = LawyerProfileSerializer(search_results, many=True).data
-    return Response({'search_results': serialized_results})
 
 
 
@@ -533,12 +541,13 @@ class GoogleOAuth2SignUpCallbackView(APIView):
         # through the sign up route.
         user, _ = User.objects.get_or_create(
             email=user_data["email"],
+            username=user_data["email"],
             defaults={"first_name": user_data["given_name"],"last_name": user_data["family_name"]},
         )
 
         # Populate the extended user data stored in UserProfile.
         UserProfile.objects.get_or_create(
-            user=user, defaults={"google_id": user_data["id"]}
+            user=user, defaults={"google_id": user_data["id"] , "image" : user_data["picture"]}
         )
 
         # Create the auth token for the frontend to use.
@@ -568,7 +577,7 @@ class GoogleOAuth2LoginCallbackView(APIView):
         try:
             user = User.objects.get(username=user_data["email"])
         except User.DoesNotExist:
-            return redirect("http://localhost:8000/core/signup")
+            return redirect("http://localhost:8000/core/signup/")
 
         # Create the auth token for the frontend to use.
         token, _ = Token.objects.get_or_create(user=user)
@@ -584,7 +593,7 @@ class GoogleOAuth2LoginCallbackView(APIView):
 @api_view(['GET'])
 def verify_admin_token(request):
     token = request.GET.get('token', '')
-    print("printign token")
+    print("printing token")
     print(token)
     if token:
         try:
@@ -597,11 +606,41 @@ def verify_admin_token(request):
             return JsonResponse({"success": False, "message": "Exception: Token is invalid."})
     else:
         return JsonResponse({"success": False, "message": "Token is invalid."})
+@api_view(['GET'])
+def verify_lawyer_token(request):
+    token = request.GET.get('token', '')
+    print("printing token")
+    print(token)
+    if token:
+        try:
+            lawyer  = Token.objects.get(key=token).user.lawyer_profile
+            if lawyer:
+                return JsonResponse({"success": True, "message": "Token is valid."})
+            else:
+                return JsonResponse({"success": False, "message": "Is not lawyer."})
+        except Token.DoesNotExist:
+            return JsonResponse({"success": False, "message": "Exception: Token is invalid."})
+    else:
+        return JsonResponse({"success": False, "message": "Token is invalid."})
 
-class CustomPageNumberPagination(PageNumberPagination):
-    page_size = 5
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+@api_view(['GET'])
+def verify_client_token(request):
+    token = request.GET.get('token', '')
+    print("printing token")
+    print(token)
+    if token:
+        try:
+            admin  = Token.objects.get(key=token).user.client_profile
+            if admin:
+                return JsonResponse({"success": True, "message": "Token is valid."})
+            else:
+                return JsonResponse({"success": False, "message": "Is not client."})
+        except Token.DoesNotExist:
+            return JsonResponse({"success": False, "message": "Exception: Token is invalid."})
+    else:
+        return JsonResponse({"success": False, "message": "Token is invalid."})
+
+
 
 @api_view(['GET'])
 def lawyer_profile_search(request):
@@ -625,13 +664,13 @@ def lawyer_profile_search(request):
         )
 
         search_results = search_results.filter(lawyer_filter | address_filter)
-    
+
     if days != ['']:
         day_filter = Q()
         for day in days:
             day_filter |= Q(time_slots__day__iexact=day)
         search_results = search_results.filter(day_filter)
-    
+
     if categories != [''] :
         category_filter = Q()
         for category in categories:
@@ -640,64 +679,134 @@ def lawyer_profile_search(request):
 
     if rating:
         search_results = search_results.filter(rating__gte=rating)
-        
-    paginator = CustomPageNumberPagination()
-    search_results = search_results.order_by('-rating',)
 
+    search_results = search_results.order_by('-rating')
+
+    paginator = CustomPageNumberPagination()
     paginated_results = paginator.paginate_queryset(search_results, request)
-    
+
     serialized_results = LawyerProfileSerializer(paginated_results, many=True).data
 
-    return Response({'search_results': serialized_results})
+    lawyer_ids = [result['id'] for result in serialized_results]
+    lawyer_images = LawyerImage.objects.filter(lawyer_id__in=lawyer_ids)
+    serialized_images = LawyerImageSerializer(lawyer_images, many=True).data
 
-@api_view(['GET'])
-def lawyer_profile_content(request):
-    lawyer_id = request.GET.get('lawyer_id')
-    lawyer_profile = get_object_or_404(LawyerProfile, id=lawyer_id)
-    serializer = LawyerProfileSerializer(lawyer_profile)
-    return Response(serializer.data)
+    image_dict = {image['id']: image['image'] for image in serialized_images}
 
-@api_view(['POST'])
-def schedule_appointment(request, lawyer_id, time_slot_id):
-    if request.user.is_authenticated and hasattr(request.user,'clientprofile'):
-        client_id = request.user.id
-         # client_id = 31 #testing
+    for result in serialized_results:
+        result['image'] = image_dict.get(result['id'], None)
 
-        client_profile = ClientProfile.objects.get(id=client_id)
-        lawyer_profile = LawyerProfile.objects.get(id=lawyer_id)
-        time_slot = TimeSlot.objects.get(id=time_slot_id, lawyer_id=lawyer_id)
+    return Response({'search_results': serialized_results, 'num_pages': paginator.page.paginator.num_pages})
 
-        existing_appointment = Appointment.objects.filter(
-            time_slot_id=time_slot_id,
-            client_id=client_id
-        ).first()
-        if existing_appointment:
-            return {"success": False, "message": "Appointment already exists for this time slot."}
 
-        appointment = Appointment.objects.create(
-            time_slot=time_slot,
-            lawyer=lawyer_profile,
-            client=client_profile,
-            status="Pending"
-        )
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from django.http import Http404
 
-        print(appointment)
+@api_view(['GET']) #lawyer
+@authentication_classes([])  # No authentication classes for unauthenticated access
+@permission_classes([AllowAny])  # Allow access to anyone, authenticated or not
+def appointments_requests(request):
+    token_key = request.headers.get('Authorization')
 
-        return Response({"success": True, "message": "Appointment created."})
-    else :
-        return {"success": False, "message": "You need to login first."}
-    
+    if token_key:
+        try:
+            user = Token.objects.get(key=token_key).user
+        except Token.DoesNotExist:
+            return Response({"success": False, "message": "Access denied. Invalid token."})
+    else:
+        return Response({"success": False, "message": "Access denied. Token not provided."})
 
-@api_view(['POST'])
-def accept_appointment(request,appointment_id):
-    appointment = Appointment.objects.get(id=appointment_id)
-    appointment.status = 'Accepted'
-    appointment.save()
-    return Response({"success": True, "message": "Appointment accepted."})
+    if hasattr(user, 'lawyer_profile'):
+        try:
+            appointments = Appointment.objects.filter(lawyer_id=user.lawyer_profile, status='Pending')
+            appointments = appointments.order_by('-date',)
 
-@api_view(['POST'])
-def refuse_appointment(request,appointment_id):
-    appointment = Appointment.objects.get(id=appointment_id)
-    appointment.status = 'Refused'
-    appointment.save()
-    return Response({"success": True, "message": "Appointment refused."})
+            serialized_results = AppointmentSerializer(appointments, many=True).data
+            return Response({"success": True, "serialized_results": serialized_results}) #add the success variable
+
+        except Http404:
+            return Response({"success": False, "message": "No appointments for this user"})
+    else:
+        return Response({"success": False, "message": "User has no lawyer profile."})
+
+
+@api_view(['GET']) #lawyer
+@authentication_classes([])
+@permission_classes([AllowAny])
+def appointments(request):
+    token_key = request.headers.get('Authorization', None)
+
+    if token_key:
+        try:
+            user = Token.objects.get(key=token_key).user
+        except Token.DoesNotExist:
+            return Response({"success": False, "message": "Access denied. Invalid token."})
+    else:
+        return Response({"success": False, "message": "Access denied. Token not provided."})
+
+    if hasattr(user, 'lawyer_profile'):
+        try:
+            appointments = Appointment.objects.filter(lawyer_id=user.lawyer_profile, status='Accepted')
+            appointments = appointments.order_by('-start_time',)
+
+            serialized_results = AppointmentSerializer(appointments, many=True).data
+
+            return Response({"success": True, "serialized_results": serialized_results}) #add the success variable
+
+        except Http404:
+            return Response({"success": False, "message": "No appointments for this user"})
+    else:
+        return Response({"success": False, "message": "User has no lawyer profile."})
+
+
+@api_view(['POST']) #lawyer
+@authentication_classes([])
+@permission_classes([AllowAny])
+def accept_appointment(request, appointment_id):
+    token_key = request.headers.get('Authorization', None)
+
+    if token_key:
+        try:
+            user = Token.objects.get(key=token_key).user
+        except Token.DoesNotExist:
+            raise PermissionDenied('Access denied. Invalid token.')
+    else:
+        return PermissionDenied("Access denied. Token not provided.")
+
+    if hasattr(user, 'lawyer_profile'):
+        try:
+            appointment = get_object_or_404(Appointment, id=appointment_id, lawyer=user.lawyer_profile)
+        except Http404:
+            return Response({"success": False, "message": "Appointment not found or not associated with your profile"})
+        appointment.status = 'Accepted'
+        appointment.save()
+        return Response({"success": True, "message": "Appointment accepted."})
+    else:
+        return Response({"success": False, "message": "You don't have permission to accept an appointment."})
+
+@api_view(['POST']) #lawyer
+def refuse_appointment(request, appointment_id):
+    token_key = request.headers.get('Authorization', None)
+
+    if token_key:
+        try:
+            user = Token.objects.get(key=token_key).user
+        except Token.DoesNotExist:
+            raise PermissionDenied('Access denied. Invalid token.')
+    else:
+        return PermissionDenied("Access denied. Token not provided.")
+
+    if hasattr(user, 'lawyer_profile'):
+        try:
+            appointment = get_object_or_404(Appointment, id=appointment_id, lawyer=user.lawyer_profile)
+        except Http404:
+            return Response({"success": False, "message": "Appointment not found or not associated with your profile."})
+
+        appointment.status = 'Refused'
+        appointment.save()
+        return Response({"success": True, "message": "Appointment refused."})
+    else:
+        return Response({"success": False, "message": "You don't have permission to refused an appointment."})

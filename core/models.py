@@ -11,7 +11,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     google_id = models.CharField(max_length=255, unique=True, null=True)
     github_id = models.CharField(max_length=255, unique=True, null=True)
-
+    image = models.ImageField(upload_to='core/images', blank=True, null=True,max_length=500)
     def clean(self):
         if self.google_id is None and self.github_id is None:
             raise ValidationError("One of google_id or github_id must be set.")
@@ -57,6 +57,7 @@ class LawyerProfile(models.Model):
     language = models.CharField(max_length=255)
     approved = models.BooleanField(default=False)
     rating = models.IntegerField(null=True, blank=True)
+    image = models.ImageField(upload_to='core/images', blank=True, null=True)
 
     # def save(self, *args, **kwargs):
     #     # Calculate and update the rating when saving the LawyerProfile instance

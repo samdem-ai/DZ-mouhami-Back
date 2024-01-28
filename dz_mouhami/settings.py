@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'rest_framework',
     "rest_framework.authtoken",
+    'drf_yasg',
     "sslserver",
     'djoser',
     'debug_toolbar',
@@ -94,7 +95,6 @@ WSGI_APPLICATION = 'DZ_Mouhami.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 import pymysql
 pymysql.install_as_MySQLdb()
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -105,6 +105,16 @@ DATABASES = {
         "PORT": "21138"
     }
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'dz_Mouhami_db',
+#         'USER': 'root',
+#         'PASSWORD': 'root',
+#         'HOST': '127.0.0.1',
+#         "PORT": "3306"
+#     }
+# }
 # mysql --user avnadmin --password=AVNS_vXeEd-Miww6VsPvnWhc --host dz-mouhami-dz-mouhami.a.aivencloud.com --port 28133 DZ_Mouhami_DB
 # DATABASES = {
 #     'default': {
@@ -120,7 +130,7 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
-
+APPEND_SLASH=False
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
