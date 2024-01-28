@@ -1,0 +1,133 @@
+
+
+
+ 
+.feed{
+   padding: 30px;
+   margin-bottom: 50px;
+   }
+   
+   .feed .titre{
+      font-size: 40px;
+      font-family: 'Quicksand' ,sans-serif;
+      font-weight: bold;   
+      margin-top: 35px;
+      margin-bottom: 35px;
+      color: black;
+      width: 350px;
+      line-height: 40px;
+   }
+   
+   @media (max-width : 420px){
+      .feed .titre {
+         width: 100%;
+         font-size: 35px;
+      }
+   
+   }
+   
+   
+   .feed .content{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: black;
+      gap: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      
+   
+   }
+   
+   @media (max-width:710px) {
+      .feed .content{
+         flex-direction: column;
+   
+      }
+   }
+   
+   .feed .content .gauche .image-feed{
+      width: 300px;
+      height: 230px;
+      object-fit: cover;
+   }
+   @media (max-width:710px) {
+      
+   .feed .content .gauche .image-feed{
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+   }
+   }
+   .feed .content .gauche .info-user{
+      width: 300px;
+      border-radius: 20px;
+      height: 150px;
+      box-shadow: 0px 4px 19px 0px rgba(0, 0, 0, 0.25);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+      justify-content: center;
+      gap: 20px;
+   }
+   
+   
+   .feed .content .gauche .info-user .name{
+      font-size: 25px;
+      font-weight: bold;
+      text-align: center;
+      font-family: 'Quicksand' ,sans-serif;
+   }
+   
+   @media (max-width:710px) {
+   
+      .feed .content .gauche{
+         display: flex;
+         align-items: center;
+         justify-content: space-between;
+         margin-right: auto;
+      }
+      .feed .content .gauche .info-user{
+         border-radius: none;
+         box-shadow: none;
+         gap: 0;
+         width: auto;
+         height: auto;
+      }
+   
+      .feed .content .gauche .info-user .name{
+         font-size: 20px;
+      }
+   }
+   
+   .feed .content .droit{
+      padding: 20px;
+      border-radius: 20px;
+      height: 380px;
+      box-shadow: 0px 4px 19px 0px rgba(0, 0, 0, 0.25);
+   }
+   .feed .content .droit .date{
+      font-size: 17px;
+      color: rgb(56, 56, 56);
+      margin-top: 20px;
+   }
+   .feed .content .droit .comment{
+   
+      font-size: 18px;   
+      padding: 10px;
+      margin-top: 15px;
+   
+   }
+   
+   @media (max-width:710px) {
+   
+      .feed .content{
+         border: 2px solid #eee;
+      }
+      .feed .content .droit{
+         height: auto;
+         padding: 13px;
+         box-shadow: none;
+      }
+   }

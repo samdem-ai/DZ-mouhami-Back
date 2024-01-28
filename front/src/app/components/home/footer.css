@@ -1,0 +1,108 @@
+.footer{
+   color:white;
+   background-color: #001F3F;
+   padding: 30px;
+   font-weight: bold;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   
+}
+
+
+.logo{
+   font-size: 40px;
+   margin-bottom: 20px;
+}
+.footer .contact{
+   display: flex;
+   align-items: center;
+   padding: 10px;
+   flex: 1;
+}
+
+.footer .contact .info{
+   margin-left: 10px;
+   font-size: 18px;
+}
+
+.social {
+   display: flex;
+   align-items: center;
+   justify-content: space-around;
+   padding: 10px;
+}
+
+
+
+.right .form-footer{
+   font-size: 20px;
+}
+.right .title{
+   font-size: 20px;
+}
+.right .footer-form{
+   background: var(--lightbolluenigg, #8395A7);
+   display: flex;
+   align-items: center;
+   padding: 20px;
+   border-radius: 10px;
+}
+
+.footer-form #form-footer{
+   height: 50px;
+   padding: 10px;
+   border: none;
+   outline: none;
+   border-radius: 6px;
+   width: 310px;
+   margin-right: 10px;
+}
+.right .title-local{
+font-size: 25px;
+}
+
+
+
+.right .local{
+
+}
+
+.right .local .title-local{
+   margin-top: 15px;
+font-size: 25px;
+margin-bottom: 15px;
+
+}
+
+.localisation{
+   display: flex;
+   align-items: center;
+   
+}
+.localisation h3{
+   font-size: 18px;
+}
+.localisation svg{
+   margin-right: 10px;
+}
+
+
+@media (max-width:767px) {
+   .footer{
+      flex-direction: column;
+
+   }
+   .right {
+      margin-top: 20px;
+   }
+   .right .footer-form{
+      padding: 10px;
+
+   }
+   
+   .footer-form #form-footer{
+      height: 40px;
+      width: auto;
+   }
+}
