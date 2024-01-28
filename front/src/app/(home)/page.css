@@ -1,0 +1,250 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
+*{
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+body {
+    background: white;
+
+}
+.landing{
+    background-image: url("/landing.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: calc(100vh - 64px);
+    padding: 20px;
+
+
+}
+.landing-content{
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+
+
+
+
+
+}
+
+.landing-content .title{
+    font-size: 60px;
+    font-family: 'Quicksand' ,sans-serif;
+    font-weight: bold;
+
+
+}
+
+@media (max-width: 615px)
+{
+    .landing-content .title{
+        font-size: 35px;
+
+    }
+}
+
+.inputs{
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #001F3F;
+    width: 60%;
+    flex-wrap: wrap;
+    border-radius: 15px;
+    padding: 15px;
+    margin-top: 30px;
+
+
+}
+@media (max-width: 615px) {
+    .inputs{
+        width: 100%;
+        padding: 24px 0px;
+    }
+
+}
+.inputs .input{
+    height: 40px;
+    width: 350px;
+    padding: 12px;
+    margin: 17px;
+    border-radius: 15px;
+    flex: 5;
+
+
+}
+
+.input-button{
+    height: 30px;
+    width: 30px;
+    color: white;
+    font-weight: bold;
+}
+@media (max-width: 615px) {
+    .landing-content{
+        align-items: center;
+    }
+
+
+
+}
+@media (max-width:370px) {
+    .input-button{
+        margin: auto;
+        width: fit-content;
+
+    }
+
+}
+
+
+
+
+.about{
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-left: 30px;
+}
+
+.about .content-1,.about .content-2{
+    flex: 1;
+}
+
+.about .content-2 .image-about{
+
+    flex-shrink: 0;
+}
+
+.about .content-1  .title{
+    font-size: 60px;
+    font-family: 'Quicksand' ,sans-serif;
+    font-weight: bold;
+    margin-bottom: 35px;
+
+
+}
+@media (max-width: 500px){
+    .about .content-1 .title{
+        font-size: 45px;
+    }
+}
+
+.about .content-1  .desc{
+    font-size: 20px;
+    line-height: 29px;
+    width: 450px;
+    text-align: justify;
+
+}
+
+@media (max-width: 800px){
+    .about .content-2{
+        display: none;
+    }
+    .about .content-1 .desc {
+        width: 100%;
+    }
+    .about{
+        padding: 30px;
+    }
+}
+
+
+.key-value{
+    padding: 30px;
+    color: black;
+
+}
+
+.key-value .title{
+    font-size: 60px;
+    font-family: 'Quicksand' ,sans-serif;
+    font-weight: bold;
+    margin-top: 35px;
+    margin-bottom: 35px;
+    color: black;
+}
+@media (max-width: 500px){
+    .key-value .title{
+        font-size: 45px;
+        line-height: 40px;
+    }
+}
+
+
+
+.key-value .content{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 30px;
+}
+@media (max-width : 1190px){
+    .key-value .content{
+        width: 800px;
+        margin: auto;
+    }
+}
+@media (max-width : 875px){
+    .key-value .content{
+        margin: auto;
+        width: 350px;
+
+    }
+
+}
+.key-value .content .card{
+    padding: 20px;
+    border-radius: 25px;
+    background: radial-gradient(353.34% 224.32% at 96.25% 4.37%, #F5F5F5 0%, #FFD700 100%);
+    min-width: 350px;
+    width: calc((100% / 3) - 20px );
+    height: 320px;
+}
+
+
+@media (max-width : 420px){
+    .key-value .content {
+        justify-content: center;
+    }
+    .key-value .content .card{
+        min-width: 0;
+        width: 300px;
+
+    }
+
+    .key-value{
+        padding: 0;
+    }
+}
+
+.key-value .content .card .head{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.key-value .content .card .head .titre{
+    font-size: 28px;
+    font-weight: bold;
+}
+
+
+
+
+
+
+
+
+
